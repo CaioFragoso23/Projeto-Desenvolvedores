@@ -30,16 +30,16 @@ export const listProjectsFromSingleDeveloper = async (request: Request, response
             developers dev
         FULL OUTER JOIN
             projects proj
-            ON proj.developersId = dev.id
+            ON proj."developerId" = dev.id
         FULL OUTER JOIN
             developer_infos dinfo
-            ON dev.id = dinfo.developersId
+            ON dev."developerInfoId" = dinfo.Id
         FULL OUTER JOIN
             projects_technologies ptech 
-            ON proj.id = ptech.projectId
+            ON proj.id = ptech."projectId"
         FULL OUTER JOIN
             technologies tech
-            ON ptech.technologyId = tech.id
+            ON ptech."technologyId" = tech.id
         WHERE dev.id = $1  
     `
     const queryConfig: QueryConfig = {
@@ -119,7 +119,7 @@ export const deleteTechnologyFromProject = async(request: Request, response: Res
         DELETE FROM
             projects_technologies ptech
         WHERE
-            ptech.technologyId = $1 AND ptech.projectId = $2
+            ptech."technologyId" = $1 AND ptech."projectId" = $2
         RETURNING *;
     `
 

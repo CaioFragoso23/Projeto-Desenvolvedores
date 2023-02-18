@@ -49,26 +49,44 @@ export const newDeveloperInfo = async (
     ...newDeveloperInfoRequest,
   };
 
-  const queryString: string = format(`
+  const queryString: string = `
         INSERT INTO
-            developers_info ("developerSince", "preferredOS", "developers_id")
+            developer_infos ("developerSince", "preferredOS")
         VALUES
-            ($1, $2, $3)
+            ($1, $2)
         RETURNING *;
              
-    `);
+    `;
 
   const queryConfig: QueryConfig = {
     text: queryString,
     values: [
       newDeveloperInfo.developerSince,
-      newDeveloperInfo.preferredOS,
-      request.params.id,
+      newDeveloperInfo.preferredOS
     ],
   };
 
-  const queryResult: DeveloperInfoResult = await client.query(queryString);
+  const queryResult: DeveloperInfoResult = await client.query(queryConfig);
   const newDeveloperInfoResponse = queryResult.rows[0];
+
+  const queryString1: string = format(`
+    UPDATE
+      developers
+    SET
+      ("developerInfoId") = ROW($1)
+    WHERE
+      id = $2;
+  `)
+
+  const queryConfig1: QueryConfig = {
+    text: queryString1,
+    values: [newDeveloperInfoResponse.id, request.params.id]
+  }
+
+  const queryResult1: DeveloperResult = await client.query(queryConfig1);
+  const developerInfoResponse = queryResult1.rows[0]
+  console.log(developerInfoResponse)
+  return response.status(201).json(newDeveloperInfoResponse)
 };
 
 export const listDevelopers = async (
@@ -77,14 +95,16 @@ export const listDevelopers = async (
 ): Promise<Response> => {
   const queryString: string = `
         SELECT
-            dev.*,
-            dinfo."developerSince",
-            dinfo."preferredOS",
-            dinfo."developers_id"
+            dev."id" "developerId",
+            dev."name" "developerName",
+            dev."email" "developerEmail",
+            dinfo."id" "developerInfoId",
+            dinfo."developerSince" "developerInfoDeveloperSince",
+            dinfo."preferredOS" "developerInfoDeveloperPreferredOS"
         FROM
-            developers AS dev
-        LEFT JOIN developers_info dinfo
-        ON  dev.developersInfoId = dinfo.id
+            developers dev
+        LEFT JOIN developer_infos dinfo
+        ON  dev."developerInfoId" = dinfo.id
     `;
   const queryResult: DeveloperResult = await client.query(queryString);
   return response.status(200).json(queryResult.rows);
@@ -96,16 +116,18 @@ export const listSingleDeveloper = async (
 ): Promise<Response> => {
   const queryString: string = `
     SELECT
-        dev.*,
-        dinfo."developerSince",
-        dinfo."preferredOS",
-        dinfo."developers_id"
+        dev."id" "developerId",
+        dev."name" "developerName",
+        dev."email" "developerEmail",
+        dinfo."id" "developerInfoId",
+        dinfo."developerSince" "developerInfoDeveloperSince",
+        dinfo."preferredOS" "developerInfoPreferredOS"
     FROM
-        developers AS dev
-    LEFT JOIN developers_info dinfo
-        ON  dev.developersInfoId = dinfo.id
+        developers dev
+    LEFT JOIN developer_infos dinfo
+        ON  dev."developerInfoId" = dinfo.id
     WHERE
-        id = $1
+        dev.id = $1
     `;
   const queryConfig: QueryConfig = {
     text: queryString,
@@ -135,7 +157,7 @@ export const updateDeveloper = async (
     changes.name = developerChangeRequest.name;
   }
   if (developerChangeRequest.email) {
-    changes.name = developerChangeRequest.email;
+    changes.email = developerChangeRequest.email;
   }
 
   const queryString: string = format(
@@ -188,34 +210,36 @@ export const updateDeveloperInfo = async (
   if (developerInfoChangeRequest.preferredOS) {
     changes.preferredOS = developerInfoChangeRequest.preferredOS;
   }
-
+try {
   const queryString: string = `
-        SELECT COUNT (*)
-        FROM
-            developers_info
-        WHERE developers_id = $1;
-    `;
+    SELECT 
+         *
+    FROM
+        developers
+    WHERE
+        id = $1
+
+  `
 
   const queryConfig: QueryConfig = {
     text: queryString,
-    values: [request.params.id],
-  };
+    values: [request.params.id]
+  }
 
-  const developerContainsInfoResult: QueryResult = await client.query(
+  const developerResult: QueryResult = await client.query(
     queryConfig
   );
-  const developerContainsInfo: number =
-    developerContainsInfoResult.rows[0].count;
+  const developer: IDeveloper =
+    developerResult.rows[0];
 
-  if (developerContainsInfo == 1) {
     const queryString1: string = format(
       `
             UPDATE 
-                developers_infos
+                developer_infos
             SET
                 (%I) = ROW(%L)
             WHERE 
-                developers_id = $1
+                id = $1
             RETURNING *;
         `,
       Object.keys(changes),
@@ -224,18 +248,21 @@ export const updateDeveloperInfo = async (
 
     const queryConfig1: QueryConfig = {
       text: queryString1,
-      values: [request.params.id],
+      values: [developer.developerInfoId],
     };
 
     const updatedDeveloperResponse: Partial<DeveloperResult> =
       await client.query(queryConfig1);
     const updatedDeveloper: IDeveloper = updatedDeveloperResponse.rows![0];
-    return response.status(200).json(updatedDeveloper);
-  } else {
-    return response
+  // } 
+
+    return response.status(200).json(updatedDeveloper);  
+} catch (error) {
+      return response
       .status(404)
       .json({ message: "Developer has no info to be updated" });
-  }
+}
+
 };
 
 export const deleteDeveloper = async (

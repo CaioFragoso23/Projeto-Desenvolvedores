@@ -20,7 +20,7 @@ export const verifyProjectMiddleware = async(request: Request, response: Respons
 
     const queryResponse: QueryResult = await client.query(queryConfig)
 
-    if(queryResponse.rowCount === 0){
+    if(queryResponse.rowCount < 0){
         return response.status(404).json({message: "Project not found."})
     }
 
@@ -39,7 +39,7 @@ export const verifyProjectDevIdMiddleware = async(request: Request, response: Re
 
     const queryConfig: QueryConfig = {
         text: queryString,
-        values: [parseInt(request.body.developersId)]
+        values: [request.body.developerId]
     }
 
     const queryResponse: QueryResult = await client.query(queryConfig)

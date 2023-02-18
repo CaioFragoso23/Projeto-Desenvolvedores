@@ -23,7 +23,7 @@ app.post("/projects", verifyProjectDevIdMiddleware, newProject)
 app.get("/projects", listProjects)
 app.get("/projects/:id", verifyProjectMiddleware, listSingleProject)
 app.patch("/projects/:id", verifyProjectMiddleware, updateProject)
-app.delete("/projects", verifyProjectMiddleware, deleteProject)
+app.delete("/projects/:id", verifyProjectMiddleware, deleteProject)
 
 app.get("/developers/:id/projects", verifyDevIdMiddleware, listProjectsFromSingleDeveloper)
 app.post("/projects/:id/technologies", verifyProjectMiddleware, verifyTechMiddleware, newProjectTechnology)

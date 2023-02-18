@@ -5,15 +5,15 @@ export interface IProjectRequest{
     description: string
     estimatedTime: string
     repository: string
-    startDate: string
+    startDate: Date
     developerId: number
 }
 
-export type projectRequiredKeys = "name" | "description" | "estimatedTime" | "repository" | "startDate" | "developersId"
+export type projectRequiredKeys = "name" | "description" | "estimatedTime" | "repository" | "startDate" | "developerId"
 
 export interface IProject extends IProjectRequest{
     id: number
-    endDate: string
+    endDate?: Date
 }
 
 export interface IProjectsTechnologies extends IProject{

@@ -6,51 +6,51 @@ import { IProject, IProjectRequest, IProjectsTechnologies, projectRequiredKeys, 
 
 export const newProject = async(request: Request, response: Response): Promise<Response> => {
     const newProjectRequest = request.body
-    const newProject : IProjectRequest = {
+    let newProject : IProject[] = {
         ...newProjectRequest
     }
+    let newProjectInfo: Array<string> = []
     const newProjectKeys: Array<string> = Object.keys(newProjectRequest)
-    const projectRequiredKeys: projectRequiredKeys[] = ["name", "description", "estimatedTime", "repository", "startDate", "developersId"]
+    const projectRequiredKeys: projectRequiredKeys[] = ["name", "description", "estimatedTime", "repository", "startDate", "developerId"]
 
     const verifyRequestKeys: boolean = projectRequiredKeys.every((key: string) => newProjectKeys.includes(key))
     if(!verifyRequestKeys){
         return response.status(400).json({message: `Missing required Keys ${projectRequiredKeys}`})
     }
 
-    const date:string = newProjectRequest.startDate
 
-    const queryString = format(
-        `
-        INSERT INTO 
-            projects (%I)
+    const queryString: string = format(
+    `
+        INSERT INTO
+            projects(%I)
         VALUES
             (%L)
         RETURNING *;
-        `,
-        Object.keys(newProject),
+    `,
+        newProjectKeys,
         Object.values(newProject)
     )
 
+    
     const queryResult: ProjectResult = await client.query(queryString)
     const projectResult: IProject = queryResult.rows[0]
-    console.log(queryResult);
-
-    return response.status(201).json(projectResult)
+    return response.status(201).json(projectResult)        
 }
+
 
 export const listProjects = async(request: Request, response: Response): Promise<Response> => {
     const queryString: string = `
         SELECT
             proj.*,
-            ptech.technologyId "technologyId",
-            tech.name "technologyName"
+            ptech."technologyId" "technologyId",
+            tech."name" "technologyName"
         FROM projects proj
         LEFT JOIN
-            project_technologies ptech
-            ON proj.id = ptech.projectId
+            projects_technologies ptech
+            ON proj.id = ptech."projectId"
         LEFT JOIN
             technologies tech
-            ON ptech.technologyId = tech.id;
+            ON ptech."technologyId" = tech.id;
     `
     const queryResult: ProjectsTechnologiesResult = await client.query(queryString)
     const queryResponse: IProjectsTechnologies[] = queryResult.rows
@@ -62,15 +62,15 @@ export const listSingleProject = async (request: Request, response: Response): P
     const queryString: string = `
     SELECT
     proj.*,
-    ptech.technologyId "technologyId",
-    tech.name "technologyName"
+    ptech."technologyId",
+    tech."name" "technologyName"
 FROM projects proj
 LEFT JOIN
-    project_technologies ptech
-    ON proj.id = ptech.projectId
+    projects_technologies ptech
+    ON proj.id = ptech."projectId"
 LEFT JOIN
     technologies tech
-    ON ptech.technologyId = tech.id
+    ON ptech."technologyId" = tech.id
     WHERE proj.id = $1;
     `
     const queryConfig: QueryConfig = {
@@ -86,7 +86,7 @@ LEFT JOIN
 
 export const updateProject = async(request: Request, response: Response): Promise<Response> => {
     const projectChangesRequest = request.body
-    const projectRequiredKeys: projectRequiredKeys[] = ["name", "description", "estimatedTime", "repository", "startDate", "developersId"]
+    const projectRequiredKeys: projectRequiredKeys[] = ["name", "description", "estimatedTime", "repository", "startDate", "developerId"]
 
     let changes: Partial<IProject> = {}
     if(projectChangesRequest.name){
@@ -149,10 +149,9 @@ export const deleteProject = async(request:Request, response: Response): Promise
     `
 
     const queryConfig: QueryConfig = {
-        text:queryString,
+        text: queryString,
         values: [request.params.id]
     }
     await client.query(queryConfig)
-
     return response.status(204).send()
 }
