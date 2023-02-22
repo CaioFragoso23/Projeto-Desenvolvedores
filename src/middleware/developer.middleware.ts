@@ -20,7 +20,7 @@ export const verifyEmailMiddleware = async(request: Request, response: Response,
 
     const queryResponse: QueryResult = await client.query(queryConfig)
 
-    if(queryResponse.rowCount > 0){
+    if(queryResponse.rowCount === 0){
         return response.status(409).json({message: "Email already exists."})
     }
 
@@ -42,7 +42,7 @@ export const verifyDevIdMiddleware = async(request: Request, response: Response,
     }
 
     const queryResponse: QueryResult = await client.query(queryConfig)
-    if(!queryResponse){
+    if(queryResponse.rowCount === 0){
         return response.status(404).json({message: "Developer not found."})
     }
 

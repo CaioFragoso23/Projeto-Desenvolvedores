@@ -6,11 +6,6 @@ CREATE TABLE IF NOT EXISTS developer_infos(
 	"preferredOS" OS NOT NULL
 );
 
-INSERT INTO 
-	developer_infos("developerSince", "preferredOS")
-	VALUES
-	('23/10/2023', 'Windows');
-SELECT * FROM developer_infos;
 
 CREATE TABLE IF NOT EXISTS developers(
 	"id" BIGSERIAL PRIMARY KEY,
@@ -19,10 +14,6 @@ CREATE TABLE IF NOT EXISTS developers(
 	"developerInfoId" INTEGER UNIQUE,
 	FOREIGN KEY ("developerInfoId") REFERENCES developer_infos("id")
 );
-INSERT INTO 
-	developers("name","email","developerInfoId")
-VALUES
-	('Caio', 'caio@mail.com', '1');
 
 CREATE TABLE IF NOT EXISTS projects(
 	"id" BIGSERIAL PRIMARY KEY,

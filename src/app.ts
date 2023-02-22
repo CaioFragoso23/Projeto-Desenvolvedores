@@ -15,7 +15,7 @@ app.post("/developers/:id/infos", verifyDevIdMiddleware, newDeveloperInfo)
 app.get("/developers", listDevelopers)
 app.get("/developers/:id", verifyDevIdMiddleware, listSingleDeveloper)
 
-app.patch("/developers/:id", verifyDevIdMiddleware, updateDeveloper)
+app.patch("/developers/:id", verifyDevIdMiddleware, verifyEmailMiddleware, updateDeveloper)
 app.patch("/developers/:id/infos", verifyDevIdMiddleware, updateDeveloperInfo)
 app.delete("/developers/:id", verifyDevIdMiddleware, deleteDeveloper)
 

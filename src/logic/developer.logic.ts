@@ -35,6 +35,21 @@ export const newDeveloper = async (
     values: [newDeveloper.name, newDeveloper.email],
   };
 
+  let errormsg: string[] = []
+  if(!newDeveloper.name){
+    let noName = "name"
+    errormsg.push(noName)
+  }
+
+  if(!newDeveloper.email){
+    let noEmail = "email"
+    errormsg.push(noEmail)
+  }
+
+  if(errormsg.length !== 0){
+    return response.status(400).json({message: `Missing requerid keys:${errormsg}`})
+  }
+
   const queryResult: DeveloperResult = await client.query(queryConfig);
   const newDeveloperResponse = queryResult.rows[0];
 
