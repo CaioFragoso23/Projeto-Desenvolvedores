@@ -130,7 +130,7 @@ export const deleteTechnologyFromProject = async(request: Request, response: Res
 
     const queryResult1: ProjectsTechnologiesResult = await client.query(queryConfig1)
 
-    if(queryResult1.rowCount < 1){
+    if(queryResult1.rowCount! > 1){
         return response.status(404).json({message: `Technology ${technologyName} not found in this project`})
     }
 
